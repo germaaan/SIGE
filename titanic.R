@@ -1,13 +1,17 @@
-install.packages('rattle')
-install.packages('rpart.plot')
-install.packages('RColorBrewer')
+# install.packages('rattle')
+# install.packages('rpart.plot')
+# install.packages('RColorBrewer')
+install.packages('randomForest')
 
 setwd("~/proyectos/titanic-kaggle")
 
-library(rpart)
-library(rattle)
-library(rpart.plot)
-library(RColorBrewer)
+# library(rpart)
+# library(rattle)
+# library(rpart.plot)
+# library(RColorBrewer)
+library(randomForest)
+
+set.seed(343)
 
 train <- read.csv(file="train.csv", header=TRUE, sep=",", dec=".")
 test <- read.csv(file="test.csv", header=TRUE, sep=",", dec=".")
@@ -22,12 +26,18 @@ prop.table(table(train$Sex, train$Survived),1)
 # test$Survived[test$Sex == 'female'] <- 1
 # test$Survived[test$Age < 20.12 ] <- 1
 
-modelo <- Survived ~ Sex + Age
-ajuste <- rpart(modelo, data=train, method="class")
+complete.cases(train)
+x <- train[complete.cases(train), ]
+complete.cases(x)
 
-fancyRpartPlot(ajuste)
+modelo <- as.factor(Survived) ~ Sex + Age
+# ajuste <- rpart(modelo, data=train, method="class")
+ajuste <- randomForest(modelo, data=x, ntree=5000)
 
-prediccion <- predict(ajuste, test, type = "class")
+# fancyRpartPlot(ajuste)
+
+# prediccion <- predict(ajuste, test, type = "class")
+prediccion <- predict(ajuste, test)
 
 resultado <- data.frame(PassengerId = test$PassengerId, Survived = prediccion)
 write.csv(resultado, file = "solution.csv", row.names = FALSE)
