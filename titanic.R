@@ -1,42 +1,54 @@
-# install.packages('rattle')
-# install.packages('rpart.plot')
-# install.packages('RColorBrewer')
-install.packages('randomForest')
+# install.packages('randomForest')
 
-setwd("~/proyectos/titanic-kaggle")
-
-# library(rpart)
-# library(rattle)
-# library(rpart.plot)
-# library(RColorBrewer)
+library(rpart)
 library(randomForest)
 
+# Inicializamos semilla fija para que no aparezca un resulta nuevo cada vez
 set.seed(343)
 
-train <- read.csv(file="train.csv", header=TRUE, sep=",", dec=".")
-test <- read.csv(file="test.csv", header=TRUE, sep=",", dec=".")
+# Cargamos los archivos con los datos
+train <- read.csv(paste(getwd(), "/train.csv", sep=""), header=TRUE, sep=",", dec=".")
+test <- read.csv(paste(getwd(), "/test.csv", sep=""), header=TRUE, sep=",", dec=".")
 
-# Mujeres y niños primero
-summary(train$Sex)
-summary(train$Age)
+# HIPÓTESIS: "Mujeres y niños primero"
+# Comprobar pasajeros por sexo y edad
+pruebas=train
+summary(pruebas$Sex)
+summary(pruebas$Age)
 
-prop.table(table(train$Sex, train$Survived),1)
+# Probabilidad de que sobrevivan por sexo y edad
+prop.table(table(pruebas$Sex, pruebas$Survived), 1)
+pruebas$Infante=ifelse(pruebas$Age < 18, "Niño", "Adulto")
+prop.table(table(pruebas$Infante, pruebas$Survived), 1)
 
+# REGLA: Si es mujer sobrevive, si es niño sobrevive
 # test$Survived <- 0
 # test$Survived[test$Sex == 'female'] <- 1
-# test$Survived[test$Age < 20.12 ] <- 1
+# test$Survived[test$Age < 18 ] <- 1
 
-complete.cases(train)
-x <- train[complete.cases(train), ]
-complete.cases(x)
+# Predecir edades perdidas en función del resto de datos relevantes
+test$Survived <- NA
+total <- rbind(train, test)
+summary(total$Age)
 
+modeloEdad <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked, 
+                data=total[!is.na(total$Age),], method="anova")
+
+total$Age[is.na(total$Age)] <- predict(modeloEdad, total[is.na(total$Age),])
+summary(total$Age)
+
+train <- total[1:891,]
+test <- total[892:1309,]
+
+# Definimos modelo
 modelo <- as.factor(Survived) ~ Sex + Age
+
+# Predicción de la supervivencia mediante Rpart
 # ajuste <- rpart(modelo, data=train, method="class")
-ajuste <- randomForest(modelo, data=x, ntree=5000)
-
-# fancyRpartPlot(ajuste)
-
 # prediccion <- predict(ajuste, test, type = "class")
+
+# Predicción de la supervivencia mediante RandomForest
+ajuste <- randomForest(modelo, data=train, importance=TRUE, ntree=5000)
 prediccion <- predict(ajuste, test)
 
 resultado <- data.frame(PassengerId = test$PassengerId, Survived = prediccion)
