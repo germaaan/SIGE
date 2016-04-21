@@ -41,7 +41,7 @@ train <- total[1:891,]
 test <- total[892:1309,]
 
 # Definimos modelo
-modelo <- as.factor(Survived) ~ Sex + Age
+modelo <- as.factor(Survived) ~ Sex + Age + Pclass
 
 # Predicción de la supervivencia mediante Rpart
 # ajuste <- rpart(modelo, data=train, method="class")
