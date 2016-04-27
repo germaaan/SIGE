@@ -42,17 +42,26 @@ total$TamFamilia <- total$SibSp + total$Parch + 1
 #total$Age[is.na(total$Age)] <- predict(modeloEdad, total[is.na(total$Age),])
 #summary(total$Age)
 
-modeloEdad <- gbm(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + TamFamilia,
+total$Fare[is.na(total$Fare)] <- 0
+summary(total$Fare)
+total$NivelTarifa=ifelse(total$Fare >= 31.280, "Muy alta", 
+                         ifelse(total$Fare >= 14.450, "Alta", 
+                                ifelse(total$Fare >= 7.896, "Normal", "Baja")))
+total$NivelTarifa=as.factor(total$NivelTarifa)
+summary(total$NivelTarifa)
+
+modeloEdad <- gbm(Age ~ Pclass + Sex + SibSp + Parch + NivelTarifa + Embarked + TamFamilia,
            data=total[!is.na(total$Age),], n.trees = 10000)
 
 total$Age[is.na(total$Age)] <- predict(modeloEdad, total, n.trees=10000)[is.na(total$Age)]
 summary(total$Age)
 
+
 train <- total[1:891,]
 test <- total[892:1309,]
 
 # Definimos modelo
-modelo <- Survived ~ Sex + Age + Fare + Embarked + TamFamilia
+modelo <- Survived ~ Sex + Age + TamFamilia + NivelTarifa
 
 # Predicción de la supervivencia mediante Rpart
 # ajuste <- rpart(modelo, data=train, method="class")
@@ -66,7 +75,7 @@ modelo <- Survived ~ Sex + Age + Fare + Embarked + TamFamilia
 ajuste <- gbm(modelo, data = train, distribution = "adaboost", n.trees = 10000)
 prediccion <- predict(ajuste, test, n.trees=10000, type="response")
 density(prediccion)
-prediccion <- ifelse(prediccion<0.4925,0,1)
+prediccion <- ifelse(prediccion<0.4947,0,1)
 
 resultado <- data.frame(PassengerId = test$PassengerId, Survived = prediccion)
 write.csv(resultado, file = "solution.csv", row.names = FALSE)
