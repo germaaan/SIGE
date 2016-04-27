@@ -42,17 +42,17 @@ total$TamFamilia <- total$SibSp + total$Parch + 1
 #total$Age[is.na(total$Age)] <- predict(modeloEdad, total[is.na(total$Age),])
 #summary(total$Age)
 
-modeloEdad <- gbm(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
-           data=total[!is.na(total$Age),], n.trees = 5000)
+modeloEdad <- gbm(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + TamFamilia,
+           data=total[!is.na(total$Age),], n.trees = 10000)
 
-total$Age[is.na(total$Age)] <- predict(modeloEdad, total, n.trees=5000)[is.na(total$Age)]
+total$Age[is.na(total$Age)] <- predict(modeloEdad, total, n.trees=10000)[is.na(total$Age)]
 summary(total$Age)
 
 train <- total[1:891,]
 test <- total[892:1309,]
 
 # Definimos modelo
-modelo <- Survived ~ Sex + Age + TamFamilia
+modelo <- Survived ~ Sex + Age + SibSp + Parch + Fare + Embarked + TamFamilia
 
 # Predicción de la supervivencia mediante Rpart
 # ajuste <- rpart(modelo, data=train, method="class")
