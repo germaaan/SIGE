@@ -52,7 +52,7 @@ train <- total[1:891,]
 test <- total[892:1309,]
 
 # Definimos modelo
-modelo <- Survived ~ Sex + Age + SibSp + Parch + Fare + Embarked + TamFamilia
+modelo <- Survived ~ Sex + Age + Fare + Embarked + TamFamilia
 
 # Predicción de la supervivencia mediante Rpart
 # ajuste <- rpart(modelo, data=train, method="class")
@@ -63,10 +63,10 @@ modelo <- Survived ~ Sex + Age + SibSp + Parch + Fare + Embarked + TamFamilia
 # prediccion <- predict(ajuste, test)
 
 # Predicción de la supervivencia mediante Boosting
-ajuste <- gbm(modelo, data = train, distribution = "adaboost", n.trees = 5000)
-prediccion <- predict(ajuste, test, n.trees=5000, type="response")
+ajuste <- gbm(modelo, data = train, distribution = "adaboost", n.trees = 10000)
+prediccion <- predict(ajuste, test, n.trees=10000, type="response")
 density(prediccion)
-prediccion <- ifelse(prediccion<0.4811,0,1)
+prediccion <- ifelse(prediccion<0.4925,0,1)
 
 resultado <- data.frame(PassengerId = test$PassengerId, Survived = prediccion)
 write.csv(resultado, file = "solution.csv", row.names = FALSE)
