@@ -29,6 +29,9 @@ prop.table(table(pruebas$Infante, pruebas$Survived), 1)
 # Predecir edades perdidas en función del resto de datos relevantes
 test$Survived <- NA
 total <- rbind(train, test)
+
+total$TamFamilia <- total$SibSp + total$Parch + 1
+
 summary(total$Age)
 
 modeloEdad <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked, 
@@ -41,7 +44,7 @@ train <- total[1:891,]
 test <- total[892:1309,]
 
 # Definimos modelo
-modelo <- as.factor(Survived) ~ Sex + Age + Pclass
+modelo <- as.factor(Survived) ~ Sex + Age + TamFamilia
 
 # Predicción de la supervivencia mediante Rpart
 # ajuste <- rpart(modelo, data=train, method="class")
