@@ -4,6 +4,7 @@
 library(rpart)
 library(randomForest)
 library(gbm)
+library(stringr)
 
 # Inicializamos semilla fija para que no aparezca un resulta nuevo cada vez
 set.seed(343)
@@ -44,16 +45,20 @@ total$TamFamilia <- total$SibSp + total$Parch + 1
 
 total$Fare[is.na(total$Fare)] <- 0
 summary(total$Fare)
-total$NivelTarifa=ifelse(total$Fare >= 31.280, "Muy alta", 
-                         ifelse(total$Fare >= 14.450, "Alta", 
-                                ifelse(total$Fare >= 7.896, "Normal", "Baja")))
+quantile(total$Fare, c(.33, .66))
+#total$NivelTarifa=ifelse(total$Fare >= 31.280, "Muy alta", 
+#                         ifelse(total$Fare >= 14.450, "Alta", 
+#                                ifelse(total$Fare >= 7.896, "Normal", "Baja")))
+total$NivelTarifa=ifelse(total$Fare >= 26.000, "Alta", 
+                         ifelse(total$Fare >= 8.5167, "Media", "Baja"))
+
 total$NivelTarifa=as.factor(total$NivelTarifa)
 summary(total$NivelTarifa)
 
 modeloEdad <- gbm(Age ~ Pclass + Sex + SibSp + Parch + NivelTarifa + Embarked + TamFamilia,
-           data=total[!is.na(total$Age),], n.trees = 10000)
+           data=total[!is.na(total$Age),], n.trees = 5000)
 
-total$Age[is.na(total$Age)] <- predict(modeloEdad, total, n.trees=10000)[is.na(total$Age)]
+total$Age[is.na(total$Age)] <- predict(modeloEdad, total, n.trees=5000)[is.na(total$Age)]
 summary(total$Age)
 
 total$NivelEdad=ifelse(total$Age >= 36.5, "Muy alta", 
@@ -62,12 +67,17 @@ total$NivelEdad=ifelse(total$Age >= 36.5, "Muy alta",
 total$NivelEdad=as.factor(total$NivelEdad)
 summary(total$NivelEdad)
 
+total$Name <- as.character(total$Name)
+strsplit(total$Name[2], split='[()]')[[1]][2]
+
+total$Familia <- as.factor(sapply(total$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][1]}))
+
 train <- total[1:891,]
 test <- total[892:1309,]
 
 # Definimos modelo
 #modelo <- as.factor(Survived) ~ Sex + Age + TamFamilia + NivelTarifa
-modelo <- Survived ~ Sex + Pclass + Age + TamFamilia + NivelTarifa
+modelo <- Survived ~ Sex + Pclass + Age + TamFamilia + Fare + Familia
 
 # Predicción de la supervivencia mediante Rpart
 # ajuste <- rpart(modelo, data=train, method="class")
@@ -78,10 +88,10 @@ modelo <- Survived ~ Sex + Pclass + Age + TamFamilia + NivelTarifa
 # prediccion <- predict(ajuste, test)
 
 # Predicción de la supervivencia mediante Boosting
-ajuste <- gbm(modelo, data = train, distribution = "adaboost", n.trees = 10000)
-prediccion <- predict(ajuste, test, n.trees=10000, type="response")
+ajuste <- gbm(modelo, data = train, distribution = "adaboost", n.trees = 5000)
+prediccion <- predict(ajuste, test, n.trees=5000, type="response")
 density(prediccion)
-prediccion <- ifelse(prediccion<0.4898,0,1)
+prediccion <- ifelse(prediccion<0.4794,0,1)
 
 resultado <- data.frame(PassengerId = test$PassengerId, Survived = prediccion)
 write.csv(resultado, file = "solution.csv", row.names = FALSE)
