@@ -77,7 +77,7 @@ test <- total[892:1309,]
 
 # Definimos modelo
 #modelo <- as.factor(Survived) ~ Sex + Age + TamFamilia + NivelTarifa
-modelo <- Survived ~ Sex + Pclass + Age + TamFamilia + Fare
+modelo <- Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + TamFamilia
 
 # Predicción de la supervivencia mediante Rpart
 # ajuste <- rpart(modelo, data=train, method="class")
@@ -91,7 +91,7 @@ modelo <- Survived ~ Sex + Pclass + Age + TamFamilia + Fare
 ajuste <- gbm(modelo, data = train, distribution = "adaboost", n.trees = 2000)
 prediccion <- predict(ajuste, test, n.trees=2000, type="response")
 density(prediccion)
-prediccion <- ifelse(prediccion<0.4778,0,1)
+prediccion <- ifelse(prediccion<0.46775,0,1)
 
 resultado <- data.frame(PassengerId = test$PassengerId, Survived = prediccion)
 write.csv(resultado, file = "solution.csv", row.names = FALSE)
