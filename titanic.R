@@ -5,7 +5,7 @@
 
 library(rpart)
 library(randomForest)
-
+library(party)
 library(gbm)
 library(stringr)
 
@@ -77,9 +77,16 @@ total$Familia <- as.factor(sapply(total$Name, FUN=function(x) {strsplit(x, split
 
 summary(total$Familia)
 total$Familia <- as.character(total$Familia)
-
 total$Familia=as.factor(ifelse(total$TamFamilia <= 3, 'COMUN', total$Familia))
 summary(total$Familia)
+
+summary(total$Embarked)
+which(total$Embarked == '')
+total$Embarked[c(62,830)] = "S"
+total$Embarked <- factor(total$Embarked)
+summary(total$Embarked)
+
+summary(total)
 
 train <- total[1:891,]
 test <- total[892:1309,]
@@ -88,19 +95,17 @@ test <- total[892:1309,]
 #modelo <- as.factor(Survived) ~ Sex + Age + TamFamilia + NivelTarifa
 modelo <- as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + TamFamilia + Familia
 
-
-
 # Predicción de la supervivencia mediante Rpart
 # ajuste <- rpart(modelo, data=train, method="class")
 # prediccion <- predict(ajuste, test, type = "class")
 
 # Predicción de la supervivencia mediante RandomForest
- #ajuste <- randomForest(modelo, data=train, importance=TRUE, ntree=2000)
- #prediccion <- predict(ajuste, test)
+ ajuste <- randomForest(modelo, data=train, importance=TRUE, ntree=2000)
+ prediccion <- predict(ajuste, test)
  
 # cforest
- ajuste <- cforest(modelo, data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
- prediccion <- predict(ajuste, test, OOB=TRUE, type = "response")
+ #ajuste <- cforest(modelo, data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
+# prediccion <- predict(ajuste, test, OOB=TRUE, type = "response")
 
 # Predicción de la supervivencia mediante Boosting
 # ajuste <- gbm(modelo, data = train, distribution = "adaboost", n.trees = 2000)
