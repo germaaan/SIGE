@@ -39,11 +39,11 @@ total$TamFamilia <- total$SibSp + total$Parch + 1
 
 #summary(total$Age)
 
-#modeloEdad <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked, 
-#                data=total[!is.na(total$Age),], method="anova")
+modeloEdad <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked, 
+                data=total[!is.na(total$Age),], method="anova")
 
-#total$Age[is.na(total$Age)] <- predict(modeloEdad, total[is.na(total$Age),])
-#summary(total$Age)
+total$Age[is.na(total$Age)] <- predict(modeloEdad, total[is.na(total$Age),])
+summary(total$Age)
 
 total$Fare[is.na(total$Fare)] <- 0
 summary(total$Fare)
@@ -57,11 +57,11 @@ total$NivelTarifa=ifelse(total$Fare >= 26.000, "Alta",
 total$NivelTarifa=as.factor(total$NivelTarifa)
 summary(total$NivelTarifa)
 
-modeloEdad <- gbm(Age ~ Pclass + Sex + SibSp + Parch + NivelTarifa + Embarked + TamFamilia,
-           data=total[!is.na(total$Age),], n.trees = 5000)
+#modeloEdad <- gbm(Age ~ Pclass + Sex + SibSp + Parch + NivelTarifa + Embarked + TamFamilia,
+#           data=total[!is.na(total$Age),], n.trees = 5000)
 
-total$Age[is.na(total$Age)] <- predict(modeloEdad, total, n.trees=5000)[is.na(total$Age)]
-summary(total$Age)
+#total$Age[is.na(total$Age)] <- predict(modeloEdad, total, n.trees=5000)[is.na(total$Age)]
+#summary(total$Age)
 
 total$NivelEdad=ifelse(total$Age >= 36.5, "Muy alta", 
                          ifelse(total$Age >= 28.00, "Alta", 
@@ -92,30 +92,43 @@ summary(total$Embarked)
 
 summary(total)
 
+#modeloEdad <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Titulo + TamFamilia, 
+#                    data=total[!is.na(total$Age),], method="anova")
+
+# total$Age[is.na(total$Age)] <- predict(modeloEdad, total[is.na(total$Age),])
+
+modeloEdad <- gbm(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Titulo + TamFamilia, 
+           data=total[!is.na(total$Age),], n.trees = 5000)
+
+total$Age[is.na(total$Age)] <- predict(modeloEdad, total, n.trees=5000)[is.na(total$Age)]
+summary(total$Age)
+
+summary(total$Age)
+
 train <- total[1:891,]
 test <- total[892:1309,]
 
 # Definimos modelo
 #modelo <- as.factor(Survived) ~ Sex + Age + TamFamilia + NivelTarifa
-modelo <- as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Titulo + TamFamilia + Familia
+modelo <- as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Titulo + TamFamilia
 
 # Predicción de la supervivencia mediante Rpart
 # ajuste <- rpart(modelo, data=train, method="class")
 # prediccion <- predict(ajuste, test, type = "class")
 
 # Predicción de la supervivencia mediante RandomForest
- ajuste <- randomForest(modelo, data=train, importance=TRUE, ntree=2000)
- prediccion <- predict(ajuste, test)
+ #ajuste <- randomForest(modelo, data=train, importance=TRUE, ntree=2000)
+ #prediccion <- predict(ajuste, test)
  
 # cforest
- #ajuste <- cforest(modelo, data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
-# prediccion <- predict(ajuste, test, OOB=TRUE, type = "response")
+ ajuste <- cforest(modelo, data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
+ prediccion <- predict(ajuste, test, OOB=TRUE, type = "response")
 
 # Predicción de la supervivencia mediante Boosting
 # ajuste <- gbm(modelo, data = train, distribution = "adaboost", n.trees = 2000)
 # prediccion <- predict(ajuste, test, n.trees=2000, type="response")
 # density(prediccion)
-# prediccion <- ifelse(prediccion<9940,0,1)
+# prediccion <- ifelse(prediccion<0.9937,0,1)
 
 resultado <- data.frame(PassengerId = test$PassengerId, Survived = prediccion)
 write.csv(resultado, file = "solution.csv", row.names = FALSE)
