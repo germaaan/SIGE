@@ -92,16 +92,16 @@ summary(total$Embarked)
 
 summary(total)
 
-#modeloEdad <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Titulo + TamFamilia, 
-#                    data=total[!is.na(total$Age),], method="anova")
+modeloEdad <- rpart(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Titulo + TamFamilia, 
+                    data=total[!is.na(total$Age),], method="anova")
 
-# total$Age[is.na(total$Age)] <- predict(modeloEdad, total[is.na(total$Age),])
+ total$Age[is.na(total$Age)] <- predict(modeloEdad, total[is.na(total$Age),])
 
-modeloEdad <- gbm(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Titulo + TamFamilia, 
-           data=total[!is.na(total$Age),], n.trees = 5000)
+#modeloEdad <- gbm(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked + Titulo + TamFamilia, 
+#           data=total[!is.na(total$Age),], n.trees = 5000)
 
-total$Age[is.na(total$Age)] <- predict(modeloEdad, total, n.trees=5000)[is.na(total$Age)]
-summary(total$Age)
+#total$Age[is.na(total$Age)] <- predict(modeloEdad, total, n.trees=5000)[is.na(total$Age)]
+#summary(total$Age)
 
 summary(total$Age)
 
