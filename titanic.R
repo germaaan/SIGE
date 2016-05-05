@@ -97,7 +97,7 @@ test <- total[892:1309,]
 
 # Definimos modelo
 #modelo <- as.factor(Survived) ~ Sex + Age + TamFamilia + NivelTarifa
-modelo <- as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + TamFamilia + Titulo
+modelo <- as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + Titulo + TamFamilia + Familia
 
 # Predicción de la supervivencia mediante Rpart
 # ajuste <- rpart(modelo, data=train, method="class")
