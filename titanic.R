@@ -1,8 +1,11 @@
 # install.packages('randomForest')
 # install.packages('gbm')
+# install.packages('party')
+
 
 library(rpart)
 library(randomForest)
+
 library(gbm)
 library(stringr)
 
@@ -92,8 +95,12 @@ modelo <- as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Emba
 # prediccion <- predict(ajuste, test, type = "class")
 
 # Predicción de la supervivencia mediante RandomForest
- ajuste <- randomForest(modelo, data=train, importance=TRUE, ntree=2000)
- prediccion <- predict(ajuste, test)
+ #ajuste <- randomForest(modelo, data=train, importance=TRUE, ntree=2000)
+ #prediccion <- predict(ajuste, test)
+ 
+# cforest
+ ajuste <- cforest(modelo, data = train, controls=cforest_unbiased(ntree=2000, mtry=3))
+ prediccion <- predict(ajuste, test, OOB=TRUE, type = "response")
 
 # Predicción de la supervivencia mediante Boosting
 # ajuste <- gbm(modelo, data = train, distribution = "adaboost", n.trees = 2000)
