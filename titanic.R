@@ -70,7 +70,11 @@ total$NivelEdad=as.factor(total$NivelEdad)
 summary(total$NivelEdad)
 
 total$Name <- as.character(total$Name)
-total$Titulo <- as.factor(sapply(total$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][2]}))
+total$Titulo <- sapply(total$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][2]})
+total$Titulo <- sub(' ', '', total$Titulo)
+total$Titulo[total$Titulo %in% c('Capt', 'Col', 'Don', 'Dr', 'Major', 'Rev', 'Sir')] <- 'Caballeros'
+total$Titulo[total$Titulo %in% c('Dona', 'Jonkheer', 'Lady', 'Miss', 'Mlle', 'Mme', 'Ms','the Countess')] <- 'Damas'
+total$Titulo <- factor(total$Titulo)
 summary(total$Titulo)
 
 total$Familia <- as.factor(sapply(total$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][1]}))
