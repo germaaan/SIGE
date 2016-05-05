@@ -2,7 +2,6 @@
 # install.packages('gbm')
 # install.packages('party')
 
-
 library(rpart)
 library(randomForest)
 library(party)
@@ -71,7 +70,8 @@ total$NivelEdad=as.factor(total$NivelEdad)
 summary(total$NivelEdad)
 
 total$Name <- as.character(total$Name)
-strsplit(total$Name[2], split='[()]')[[1]][2]
+total$Titulo <- as.factor(sapply(total$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][2]}))
+summary(total$Titulo)
 
 total$Familia <- as.factor(sapply(total$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][1]}))
 
@@ -93,7 +93,7 @@ test <- total[892:1309,]
 
 # Definimos modelo
 #modelo <- as.factor(Survived) ~ Sex + Age + TamFamilia + NivelTarifa
-modelo <- as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + TamFamilia + Familia
+modelo <- as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + TamFamilia + Titulo
 
 # Predicción de la supervivencia mediante Rpart
 # ajuste <- rpart(modelo, data=train, method="class")
