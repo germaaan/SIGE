@@ -7,7 +7,6 @@ library(randomForest)
 library(gbm)
 library(caret)
 
-
 # Inicializamos semilla fija para que no aparezca un resulta nuevo cada vez
 set.seed(343)
 
@@ -45,6 +44,13 @@ total$TamFamilia <- total$SibSp + total$Parch + 1
 #total$Age[is.na(total$Age)] <- predict(modeloEdad, total[is.na(total$Age),])
 #summary(total$Age)
 
+total$Fare[is.na(total$Fare)] <- 0
+summary(total$Fare)
+total$NivelTarifa=ifelse(total$Fare >= 26.000, "Alta", 
+                         ifelse(total$Fare >= 8.5167, "Media", "Baja"))
+total$NivelTarifa=as.factor(total$NivelTarifa)
+summary(total$NivelTarifa)
+
 modeloEdad <- gbm(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
                   data=total[!is.na(total$Age),], n.trees = 5000)
 
@@ -53,11 +59,16 @@ summary(total$Age)
 
 total$Survived  <- as.factor(total$Survived )
 
+total$Name <- as.character(total$Name)
+strsplit(total$Name[2], split='[()]')[[1]][2]
+
+total$Familia <- as.factor(sapply(total$Name, FUN=function(x) {strsplit(x, split='[,.]')[[1]][1]}))
+
 train <- total[1:891,]
 test <- total[892:1309,]
 
 # Definimos modelo
-modelo <- Survived ~ Sex + Age + TamFamilia
+modelo <- as.factor(Survived) ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked + TamFamilia
 
 # Predicción de la supervivencia mediante Rpart
 # ajuste <- rpart(modelo, data=train, method="class")
@@ -79,21 +90,10 @@ modelo <- Survived ~ Sex + Age + TamFamilia
 
 #ajuste = train(modelo, data=train, method="gbm", distribution="adaboost", verbose=FALSE, tuneGrid=data.frame(.n.trees=5000, .shrinkage=0.01, .interaction.depth=1, .n.minobsinnode=1))
 
-outcomeName <- 'Survived'
-
-grid <- expand.grid(interaction.depth = 1,
-                        n.trees = 5000,
-                        shrinkage = 0.01,
-                        n.minobsinnode = 1)
-
-ajuste <- train(modelo, data = train,
-                 method = "gbm",
-                 distribution="adaboost",
-                 verbose = FALSE,
-                 tuneGrid = grid)
-
-confusionMatrix(ajuste)
-prediccion <- predict(ajuste, test, n.trees=5000, type="prob")
+ajuste <- randomForest(modelo, data=train, importance=TRUE, ntree=2000)
+prediccion <- predict(ajuste, test)
+tab <- table(predict(ajuste), train$Survived)
+sum(diag(tab))/sum(tab)
 
 resultado <- data.frame(PassengerId = test$PassengerId, Survived = prediccion)
 write.csv(resultado, file = "solution.csv", row.names = FALSE)

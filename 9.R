@@ -46,9 +46,9 @@ total$TamFamilia <- total$SibSp + total$Parch + 1
 #summary(total$Age)
 
 modeloEdad <- gbm(Age ~ Pclass + Sex + SibSp + Parch + Fare + Embarked,
-                  data=total[!is.na(total$Age),], n.trees = 5000)
+                  data=total[!is.na(total$Age),], n.trees = 10000)
 
-total$Age[is.na(total$Age)] <- predict(modeloEdad, total, n.trees=5000)[is.na(total$Age)]
+total$Age[is.na(total$Age)] <- predict(modeloEdad, total, n.trees=10000)[is.na(total$Age)]
 summary(total$Age)
 
 total$Survived  <- as.factor(total$Survived )
@@ -57,7 +57,8 @@ train <- total[1:891,]
 test <- total[892:1309,]
 
 # Definimos modelo
-modelo <- Survived ~ Sex + Age + TamFamilia
+modelo <- Survived ~ Sex + Age + Fare + Embarked + TamFamilia
+
 
 # Predicción de la supervivencia mediante Rpart
 # ajuste <- rpart(modelo, data=train, method="class")
@@ -82,15 +83,15 @@ modelo <- Survived ~ Sex + Age + TamFamilia
 outcomeName <- 'Survived'
 
 grid <- expand.grid(interaction.depth = 1,
-                        n.trees = 5000,
-                        shrinkage = 0.01,
-                        n.minobsinnode = 1)
+                    n.trees = 10000,
+                    shrinkage = 0.01,
+                    n.minobsinnode = 1)
 
 ajuste <- train(modelo, data = train,
-                 method = "gbm",
-                 distribution="adaboost",
-                 verbose = FALSE,
-                 tuneGrid = grid)
+                method = "gbm",
+                distribution="adaboost",
+                verbose = FALSE,
+                tuneGrid = grid)
 
 confusionMatrix(ajuste)
 prediccion <- predict(ajuste, test, n.trees=5000, type="prob")
