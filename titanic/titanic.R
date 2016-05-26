@@ -17,6 +17,7 @@ test$Survived <- NA
 # Juntamos todos los datos para la creación/predicción de las variables
 total <- rbind(train, test)
 
+
 # No dejamos tarifas vacías
 summary(total$Fare)
 total$Fare[is.na(total$Fare)] <- 0
