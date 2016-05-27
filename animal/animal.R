@@ -1,8 +1,13 @@
 # install.packages("randomForest")
+# install.packages("unbalanced")
+# install.packages("DMwR")
 
+library(plyr)
 library(caret)
 library(randomForest)
 library(rpart)
+library(unbalanced)
+library(DMwR)
 
 # Inicializamos semilla fija para que no aparezca un resulta nuevo cada vez
 set.seed(343)
@@ -45,6 +50,15 @@ summary(total$SexuponOutcome)
 summary(total$Breed)
 summary(total$Color)
 
+total$Color[grepl("^Agouti*", total$Color)] <- "Agouti"
+total$Color[grepl("^Apricot*", total$Color)] <- "Apricot"
+total$Color[grepl("^Black*", total$Color)] <- "Black"
+total$Color[grepl("^Brown*", total$Color)] <- "Brown"
+total$Color[grepl("^White*", total$Color)] <- "White"
+total$Color[grepl("^Blue*", total$Color)] <- "Blue"
+
+prop.table(table(total$Color))
+
 # clustering
 #discretizar categoricos para prediccion
 #pasar todo a años
@@ -53,13 +67,12 @@ summary(total$Color)
 #edad promedio en vez de predecir
 
 # Volvemos a separar los datos en sus respectivos conjuntos de entrenamiento y validación
-train <- total[1:26729, c(1, 2, 3, 5, 6, 9)]
-test <- total[26730:nrow(total), c(1, 2, 3, 5, 6, 9)]
+train <- total[1:nrow(train), c(1, 2, 3, 5, 6, 9)]
+test <- total[(nrow(train)+1):nrow(total), c(1, 2, 3, 5, 6, 9)]
 
 modelo <- OutcomeType ~ AnimalType + Edad + SexuponOutcome + Breed + Color
-#ajuste <- randomForest(modelo, data=train, importance=TRUE, mtry = 3, n.trees = 2000)
+ajuste <- randomForest(modelo, data=train, importance=TRUE, mtry = 3, n.trees = 2000)
 
 #prediccion <- predict(ajuste, test, type="vote")
 
-ajuste <- train(modelo, data=train, method="rf", trControl=trainControl(method="cv", number=5), 
-                prox=TRUE, allowParallel=TRUE)
+
