@@ -2,12 +2,12 @@
 # install.packages("unbalanced")
 # install.packages("DMwR")
 
-library(plyr)
+#library(plyr)
 library(caret)
 library(randomForest)
 library(rpart)
-library(unbalanced)
-library(DMwR)
+#library(unbalanced)
+#library(DMwR)
 
 # Inicializamos semilla fija para que no aparezca un resulta nuevo cada vez
 set.seed(343)
@@ -16,9 +16,11 @@ set.seed(343)
 train <- read.csv("/home/germaaan/proyectos/titanic-kaggle/animal/train.csv", header=TRUE, sep=",")
 test <- read.csv("/home/germaaan/proyectos/titanic-kaggle/animal/test.csv", header=TRUE, sep=",")
 
+# Ambos ID iguales
 test$ID <- as.character(test$ID)
 names(train)[1] <- "ID"
 
+# Añadir clases faltantes en test
 test$OutcomeType <- ""
 test$OutcomeSubtype <- ""
 
@@ -35,7 +37,7 @@ total$ValorTiempo=as.numeric(total$ValorTiempo)
 multiplicador=ifelse(total$UnidadTiempo == 'day', 1, ifelse(total$UnidadTiempo == 'week', 7, ifelse(total$UnidadTiempo == 'month', 30, ifelse(total$UnidadTiempo == 'year', 365, NA))))
 total$Edad=multiplicador * total$ValorTiempo
 total$Edad[total$Edad == 0] <- NA
-summary(total$Edad)
+
 #probar a predecir sexo
 total$SexuponOutcome[total$SexuponOutcome == ""] <- "Unknown"
 total$SexuponOutcome <- factor(total$SexuponOutcome)
@@ -354,14 +356,37 @@ summary(total$Color)
 #edad promedio en vez de predecir
 
 # Volvemos a separar los datos en sus respectivos conjuntos de entrenamiento y validación
-train <- total[1:nrow(train), c(1, 2, 3, 6, 9, 10)]
-test <- total[(nrow(train)+1):nrow(total), c(1, 2, 3, 6, 9, 10)]
+train <- droplevels(total[1:nrow(train), c(1, 2, 3, 6, 9, 10)])
+test <- droplevels(total[(nrow(train)+1):nrow(total), c(1, 2, 3, 6, 9, 10)])
 
-train <- droplevels(train)
+inTrain <- createDataPartition(y=train$OutcomeType, p=.6, list=FALSE)
+training <- train[inTrain,]
+testing <- train[-inTrain,]
 
-modelo <- OutcomeType ~ AnimalType + Edad + SexuponOutcome + Raza + Color
-ajuste <- randomForest(modelo, data=train, importance=TRUE, mtry = 3, n.trees = 2000)
+clases <- OutcomeType ~ AnimalType + Edad + SexuponOutcome + Raza + Color
 
-#prediccion <- predict(ajuste, test, type="vote")
+modelo <- train(clases, data=training, method="parRF", trControl=trainControl(method="cv", number=5))
+modelo
 
+validacion <- predict(modelo, testing)
+confusionMatrix(testing$OutcomeType, validacion)
 
+prediccion <- predict(modelo, test)
+
+id <- seq(1, 11456)
+submission <- data.frame(ID=id, prediccion)
+submission$prediccion <- as.character(submission$prediccion)
+submission$Adoption <- 0
+submission$Died <- 0
+submission$Euthanasia <- 0
+submission$Return_to_owner <- 0
+submission$Transfer <- 0
+
+submission$Adoption[submission$prediccion == "Adoption"] <- 1
+submission$Died[submission$prediccion == "Died"] <- 1
+submission$Euthanasia[submission$prediccion == "Euthanasia"] <- 1
+submission$Return_to_owner[submission$prediccion == "Return_to_owner"] <- 1
+submission$Transfer[submission$prediccion == "Transfer"] <- 1
+submission$prediccion <- NULL
+
+write.csv(submission, file = "animal_solution.csv", row.names = F)
