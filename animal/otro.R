@@ -173,6 +173,7 @@ rf_preds <- data.frame(predict(rf, test, type='vote'))
 # take a look
 head(rf_preds)
 
+install.packages("gridExtra")
 library(gridExtra)
 g1 <- ggplot() + geom_point(aes(x=rf_preds$Adoption, y=xgb_preds$Adoption),
                             color='steelblue', alpha=0.3) +
