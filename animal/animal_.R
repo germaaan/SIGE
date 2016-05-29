@@ -17,7 +17,7 @@ names(train)[1] <- "ID"
 test$OutcomeType <- ""
 test$OutcomeSubtype <- ""
 
-total <- rbind(train, test)[, c(4, 6, 7, 8, 9, 10)]
+total <- rbind(train, test)
 
 #completar y convertir a numero
 #summary(total$AgeuponOutcome)
@@ -97,8 +97,8 @@ total$Color <- as.numeric(total$Color) - 1
 total$Raza <- as.numeric(total$Raza) - 1
 
 # Volvemos a separar los datos en sus respectivos conjuntos de entrenamiento y validación
-train <- droplevels(total[1:nrow(train), c(1, 2, 3, 6, 9, 10)])
-test <- droplevels(total[(nrow(train)+1):nrow(total), c(1, 2, 3, 6, 9, 10)])
+train <- droplevels(total[1:nrow(train), c(4, 6, 7, 10, 13, 14)])
+test <- droplevels(total[(nrow(train)+1):nrow(total), c(4, 6, 7, 10, 13, 14)])
 test <- as.matrix(test)
 
 # Crear particiones para entrenamiento y validacion
@@ -128,7 +128,7 @@ xg.param <- list("objective" = "multi:softprob",
 
 # Cross-Validation
 xgb.fit.cv <- xgb.cv(param = xg.param, data = train.x, label = train.y, 
-                     nfold = 5, nrounds = 10000)
+                     nfold = 5, nrounds = 1000)
 
 cv.min <- min(xgb.fit.cv$test.mlogloss.mean)
 cv.min.rounds <- which(xgb.fit.cv$test.mlogloss.mean == min(xgb.fit.cv$test.mlogloss.mean)) 
