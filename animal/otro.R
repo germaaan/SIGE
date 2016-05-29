@@ -1,213 +1,226 @@
-library(rpart)
-library(dplyr)
-library(ggplot2)
-library(lubridate)
-library(stringr)
+############################################################################
+### load libraries
+############################################################################
 library(xgboost)
-library(randomForest)
+library(methods)
+library(caret)
 
-###############################################################################
-# This section follows Megan Risdal's 'Quick and Dirty Random Forest' Script  #
-# See her excellent script for more details                                   #
-###############################################################################
+############################################################################
+### load train data and create matrices for xgb
+############################################################################
+train <- read.csv("/home/germaaan/proyectos/titanic-kaggle/animal/otto/train.csv", header = T)
+train$id <- NULL  # remove ID
+set.seed(668)
+train <- train[sample(nrow(train)), ]  # shuffle data
 
-train <- read.csv('/home/germaaan/proyectos/titanic-kaggle/animal/train.csv', stringsAsFactors=FALSE)
-test <- read.csv('/home/germaaan/proyectos/titanic-kaggle/animal/test.csv', stringsAsFactors=FALSE)
+in.train <- createDataPartition(y = train$target, p = 0.80, list = F)  # use this to train model
+in.train <- in.train[1:49506]  # this makes it a vector
 
-train %>% head()
-test %>% head()
+# create target vector
+train.y <- train$target
+train.y
+train.y <- gsub('Class_','', train.y)
+train.y <- as.integer(train.y) - 1  #xgboost take features in [0, number of classes)
+train.y
 
-colnames(train)[1] <- 'ID'
-test$ID <- as.character(test$ID)
+# create matrix of original features for train.x
+train.x <- train
+train.x$target <- NULL
+train.x <- as.matrix(train.x)
+train.x <- matrix(data = as.numeric(train.x), nrow = nrow(train.x), ncol = ncol(train.x))
 
-full <- bind_rows(train, test)
 
-# Get the time value:
-full$TimeValue <- sapply(full$AgeuponOutcome,  
-                         function(x) strsplit(x, split = ' ')[[1]][1])
+############################################################################
+### create useful functions (check log loss specific to xgb; requires matrix creation)
+############################################################################
+### create function to compute logloss on test set in one step
+checkLogLoss2 <- function(model, xgbdata, traindata) {
+  
+  # LogLoss Function
+  LogLoss <- function(actual, predicted, eps = 1e-15) {
+    predicted <- pmax(pmin(predicted, 1 - eps), eps)
+    -sum(actual*log(predicted))/nrow(actual)
+  }
+  
+  # create predictions and dummy predictions and compare with fitted model
+  pred <- predict(xgb.fit, newdata = xgbdata)
+  pred <- t(matrix(pred, nrow = 9, ncol = length(pred)/9))  # prediction based on fitted model
+  dummy.fit <- dummyVars(~ target, data = traindata, levelsOnly = T)
+  truth <- predict(dummy.fit, newdata = traindata)  # ground truth
+  LogLoss(truth, pred)
+}
 
-# Now get the unit of time:
-full$UnitofTime <- sapply(full$AgeuponOutcome,  
-                          function(x) strsplit(x, split = ' ')[[1]][2])
 
-# Fortunately any "s" marks the plural, so we can just pull them all out
-full$UnitofTime <- gsub('s', '', full$UnitofTime)
+############################################################################
+### try creating a small xgb model
+############################################################################
+# Set necessary parameter
+xg.param <- list("objective" = "multi:softprob",
+                 'eval_metric' = "mlogloss",
+                 'num_class' = 9,
+                 'eta' = 0.1,
+                 'gamma' = 1,
+                 'max.depth' = 10,
+                 'min_child_weight' = 4,
+                 'subsample' = 0.9,
+                 'colsample_bytree' = 0.8,
+                 'nthread' = 3)
 
-full$TimeValue  <- as.numeric(full$TimeValue)
-full$UnitofTime <- as.factor(full$UnitofTime)
+# run cross validation
+xgb.fit.cv <- xgb.cv(param = xg.param, data = train.x[in.train, ], label = train.y[in.train], 
+                     nfold = 5, nrounds = 250)
 
-# Make a multiplier vector
-multiplier <- ifelse(full$UnitofTime == 'day', 1,
-                     ifelse(full$UnitofTime == 'week', 7,
-                            ifelse(full$UnitofTime == 'month', 30, # Close enough
-                                   ifelse(full$UnitofTime == 'year', 365, NA))))
+# check best iteration
+which(xgb.fit.cv$test.mlogloss.mean == min(xgb.fit.cv$test.mlogloss.mean))
 
-# Apply our multiplier
-full$AgeinDays <- full$TimeValue * multiplier
+# fit model on training set
+xgb.fit <- xgboost(param = xg.param, data = train.x[in.train, ], 
+                   label = train.y[in.train], nrounds = 250)
 
-# Replace blank names with "Nameless"
-full$Name <- ifelse(nchar(full$Name)==0, 'Nameless', full$Name)
+# check log loss on validation set
+checkLogLoss2(xgb.fit, train.x[-in.train, ], train[-in.train, ])  # log.loss = 0.4627816
 
-# Make a name v. no name variable
-full$HasName[full$Name == 'Nameless'] <- 0
-full$HasName[full$Name != 'Nameless'] <- 1
+# fit model on full training data
+xgb.fit <- xgboost(param = xg.param, data = train.x, 
+                   label = train.y, nrounds = 250)
 
-# Replace blank sex with most common
-full$SexuponOutcome <- ifelse(nchar(full$SexuponOutcome)==0, 
-                              'Spayed Female', full$SexuponOutcome)
 
-# Extract time variables from date (uses the "lubridate" package)
-full$Hour    <- hour(full$DateTime)
-full$Weekday <- wday(full$DateTime)
-full$Month   <- month(full$DateTime)
-full$Year    <- year(full$DateTime)
+############################################################################
+### check feature importance to create interaction features
+# note: while this worked with the original features, it seemed to increase
+# error rate when using scaled features. Thus, it was not used eventually.
+############################################################################
+# fit model on training set
+xgb.fit <- xgboost(param = xg.param, data = train.x[in.train, ], 
+                   label = train.y[in.train], nrounds = 100)
 
-# Time of day may also be useful
-full$TimeofDay <- ifelse(full$Hour > 5 & full$Hour < 11, 'morning',
-                         ifelse(full$Hour > 10 & full$Hour < 16, 'midday',
-                                ifelse(full$Hour > 15 & full$Hour < 20, 'lateday', 'night')))
+# check feature importance
+xgb.importance(feature_names = names(train), model = xgb.fit)
 
-# Put factor levels into the order we want
-full$TimeofDay <- factor(full$TimeofDay, 
-                         levels = c('morning', 'midday',
-                                    'lateday', 'night'))
 
-summary(full$AgeinDays)
+############################################################################
+### xgb using original + aggregated features
+# aggregated features being row sum, row var, and no. of cols filled
+############################################################################
+# Set necessary parameter
+xg.param <- list("objective" = "multi:softprob",
+                 'eval_metric' = "mlogloss",
+                 'num_class' = 9,
+                 'eta' = 0.005,
+                 'gamma' = 1,
+                 'max.depth' = 10,
+                 'min_child_weight' = 4,
+                 'subsample' = 0.9,
+                 'colsample_bytree' = 0.8,
+                 'nthread' = 3)
 
-# Use "grepl" to look for "Mix"
-full$IsMix <- ifelse(grepl('Mix', full$Breed), 1, 0)
+# run cross validation
+xgb.fit.cv <- xgb.cv(param = xg.param, data = train.x[in.train, ], label = train.y[in.train], 
+                     nfold = 5, nrounds = 10000)
 
-# Split on "/" and remove " Mix" to simplify Breed
-full$SimpleBreed <- sapply(full$Breed, 
-                           function(x) gsub(' Mix', '', 
-                                            strsplit(x, split = '/')[[1]][1]))
+# check best iteration
+cv.min <- min(xgb.fit.cv$test.mlogloss.mean)
+cv.min.rounds <- which(xgb.fit.cv$test.mlogloss.mean == min(xgb.fit.cv$test.mlogloss.mean))  
+# min = 0.469457 at nrounds 7483 7484
 
-# Use strsplit to grab the first color
-full$SimpleColor <- sapply(full$Color, 
-                           function(x) strsplit(x, split = '/| ')[[1]][1])
+cv.rounds <- round(mean(which(xgb.fit.cv$test.mlogloss.mean == min(xgb.fit.cv$test.mlogloss.mean))))
 
-levels(factor(full$SimpleColor))
 
-# Use "grepl" to look for "Intact"
-full$Intact <- ifelse(grepl('Intact', full$SexuponOutcome), 1,
-                      ifelse(grepl('Unknown', full$SexuponOutcome), 'Unknown', 0))
+# fit model on training set
+xgb.fit <- xgboost(param = xg.param, data = train.x[in.train, ], 
+                   label = train.y[in.train], nrounds = cv.rounds)
 
-# Use "grepl" to look for sex
-full$Sex <- ifelse(grepl('Male', full$SexuponOutcome), 'Male',
-                   ifelse(grepl('Unknown', full$Sex), 'Unknown', 'Female'))
+# check log loss on validation set
+checkLogLoss2(xgb.fit, train.x[-in.train, ], train[-in.train, ])  
+# log.loss = 0.4517306 (improvement of 0.0006185)
 
-# Use rpart to predict the missing age values
-age_fit <- rpart(AgeinDays ~ AnimalType + Sex + Intact + SimpleBreed + HasName, 
-                 data = full[!is.na(full$AgeinDays), ], 
-                 method = 'anova')
 
-# Impute predicted age values where missing using "predict"
-full$AgeinDays[is.na(full$AgeinDays)] <- predict(age_fit, full[is.na(full$AgeinDays), ])
+# fit model on full training data
+xgb.fit <- xgboost(param = xg.param, data = train.x, 
+                   label = train.y, nrounds = cv.rounds)
+# LB score = 0.44085 
 
-# All gone? Yes.
-sum(is.na(full$AgeinDays))
+############################################################################
+### xgb using original features (after mean-standardization) 
+# gamma = 0.5, min_child = 4
+############################################################################
+# Set necessary parameter
+xg.param <- list("objective" = "multi:softprob",
+                 'eval_metric' = "mlogloss",
+                 'num_class' = 9,
+                 'eta' = 0.005,
+                 'gamma' = 0.5,
+                 'max.depth' = 10,
+                 'min_child_weight' = 4,
+                 'subsample' = 0.9,
+                 'colsample_bytree' = 0.8,
+                 'nthread' = 3)
 
-# Use the age variable to make a puppy/kitten variable
-full$Lifestage[full$AgeinDays < 365] <- 'baby'
-full$Lifestage[full$AgeinDays >= 365] <- 'adult'
+xgb.fit.cv <- xgb.cv(param = xg.param, data = train.x, label = train.y, 
+                     nfold = 5, nrounds = 10000)
 
-full$Lifestage <- factor(full$Lifestage)
+# check best iteration
+cv.min <- min(xgb.fit.cv$test.mlogloss.mean)
+cv.min.rounds <- which(xgb.fit.cv$test.mlogloss.mean == min(xgb.fit.cv$test.mlogloss.mean))  
+# min = 0.448826 at nrounds 7563
 
-factorVars <- c('Name','OutcomeType','OutcomeSubtype','AnimalType',
-                'SexuponOutcome','AgeuponOutcome','SimpleBreed','SimpleColor',
-                'HasName','IsMix','Intact','Sex','TimeofDay','Lifestage')
+plot(xgb.fit.cv$test.mlogloss.mean[7000:8000])
+cv.rounds <- round(mean(which(xgb.fit.cv$test.mlogloss.mean == min(xgb.fit.cv$test.mlogloss.mean))))  
 
-full[factorVars] <- lapply(full[factorVars], function(x) as.factor(x))
+# fit model on training set
+xgb.fit <- xgboost(param = xg.param, data = train.x[in.train, ], 
+                   label = train.y[in.train], nrounds = cv.rounds)
 
-# Split up train and test data
-train <- full[1:26729, ]
-test  <- full[26730:nrow(full), ]
+# check log loss on validation set
+checkLogLoss2(xgb.fit, train.x[-in.train, ], train[-in.train, ])  
+# log.loss = 0.4489771 
 
-# prepare for xgboost model - is data correct type?
-class(train$OutcomeType)
+# fit model on full training data
+xgb.fit <- xgboost(param = xg.param, data = train.x, 
+                   label = train.y, nrounds = cv.rounds)
+# LB score = 0.43609
 
-# No. Need to change to numeric
-y_train <- as.numeric(as.factor(train$OutcomeType)) - 1
 
-# keep track of the labels
-labels_train <- data.frame(train$OutcomeType, y_train)
+############################################################################
+### create predictions on test data
+############################################################################
+test <- read.csv("/home/germaaan/proyectos/titanic-kaggle/animal/otto/test.csv", header = T)
+test.id <- test$id
+test$id <- NULL
 
-# xgboost-specific design matrices
-xgb_train <- xgb.DMatrix(model.matrix(~AnimalType+AgeinDays+Intact+
-                                        HasName+Hour+Weekday+TimeofDay+
-                                        SimpleColor+IsMix+Sex+Month, data=train),
-                         label=y_train, missing=NA)
-xgb_test <- xgb.DMatrix(model.matrix(~AnimalType+AgeinDays+Intact+
-                                       HasName+Hour+Weekday+TimeofDay+
-                                       SimpleColor+IsMix+Sex+Month, data=test), missing=NA)
+# create matrix of original features for test.x
+test <- as.matrix(test)
+test <- matrix(data = as.numeric(test), nrow = nrow(test), ncol = ncol(test))
 
-# build model
-xgb_model <- xgboost(xgb_train, y_train, nrounds=45, objective='multi:softprob',
-                     num_class=5, eval_metric='mlogloss',
-                     early.stop.round=TRUE)
+# create predictions on test data 
+# using original + aggregated features
+xgb.pred <- predict(xgb.fit, test)
+xgb.pred <- t(matrix(xgb.pred, nrow = 9, ncol = length(xgb.pred)/9))
+xgb.pred <- data.frame(1:nrow(xgb.pred), xgb.pred)
+names(xgb.pred) <- c('id', paste0('Class_',1:9))
+write.csv(xgb.pred, file='xgb.pred.csv', quote=FALSE, row.names=FALSE)
 
-# make predictions
-predictions <- predict(xgb_model, xgb_test)
 
-# reshape predictions
-xgb_preds <- data.frame(t(matrix(predictions, nrow=5, ncol=length(predictions)/5)))
+# create predictions on test data 
+# using original (after mean-standardization) features
+test <- read.csv("test.csv", header = T)
+test.id <- test$id
+test$id <- NULL
 
-# name columns
-colnames(xgb_preds) <- c('Adoption', 'Died', 'Euthanasia', 'Return_to_owner', 'Transfer')
+# features for difference from mean
+for (i in 1:93) {
+  eval(parse(text = paste0('test$feat_mean_', i, ' <- test[, i] - mean(test[, i])')))
+}
+test <- test[-c(1:93)]
 
-# attach ID column
-xgb_preds['ID'] <- test['ID']
+# create matrix of original features for test.x
+test <- as.matrix(test)
+test <- matrix(data = as.numeric(test), nrow = nrow(test), ncol = ncol(test))
 
-# quick peek - looks good
-head(xgb_preds)
-
-# build model - i like verbose output ;-)
-rf <- randomForest(OutcomeType~AnimalType+AgeinDays+Intact+
-                     HasName+Hour+Weekday+TimeofDay+
-                     SimpleColor+IsMix+Sex+Month, data=train,
-                   importance=FALSE, do.trace=1, ntree=550)
-
-# make predictions
-rf_preds <- data.frame(predict(rf, test, type='vote'))
-
-# take a look
-head(rf_preds)
-
-install.packages("gridExtra")
-library(gridExtra)
-g1 <- ggplot() + geom_point(aes(x=rf_preds$Adoption, y=xgb_preds$Adoption),
-                            color='steelblue', alpha=0.3) +
-  labs(x='Random Forest', y='XGBoost') +
-  ggtitle('Adoption Predictions')
-g2 <- ggplot() + geom_point(aes(x=rf_preds$Died, y=xgb_preds$Died),
-                            color='steelblue', alpha=0.3) +
-  labs(x='Random Forest', y='XGBoost') +
-  ggtitle('Died Predictions')
-g3 <- ggplot() + geom_point(aes(x=rf_preds$Euthanasia, y=xgb_preds$Euthanasia),
-                            color='steelblue', alpha=0.3) + 
-  labs(x='Random Forest', y='XGBoost') +
-  ggtitle('Euthanasia Predictions')
-g4 <- ggplot() + geom_point(aes(x=rf_preds$Return_to_owner, y=xgb_preds$Return_to_owner),
-                            color='steelblue', alpha=0.3) + 
-  labs(x='Random Forest', y='XGBoost') + 
-  ggtitle('Return To Owner Predictions')
-g5 <- ggplot() + geom_point(aes(x=rf_preds$Transfer, y=xgb_preds$Transfer),
-                            color='steelblue', alpha=0.3) + 
-  labs(x='Random Forest', y='XGBoost') +
-  ggtitle('Transfer Predictions')
-
-grid.arrange(g1, g2, g3, g4, g5, ncol=3, nrow=2)
-
-ave_pred <- xgb_preds
-
-# drop ID column for averaging
-ave_pred <- ave_pred[,1:5]
-ave_pred %>% head()
-
-# average predictions
-ave_pred <- 0.5*(ave_pred+rf_preds)
-
-ave_pred %>% head()
-
-# write the submission file
-write.csv(ave_pred, 'rf_xgb_avg.csv', row.names=FALSE)
+# create predictions on test data 
+# using original + aggregated features
+xgb.pred <- predict(xgb.fit, test)
+xgb.pred <- t(matrix(xgb.pred, nrow = 9, ncol = length(xgb.pred)/9))
+xgb.pred <- data.frame(1:nrow(xgb.pred), xgb.pred)
+names(xgb.pred) <- c('id', paste0('Class_',1:9))
+write.csv(xgb.pred, file='xgb.pred2.csv', quote=FALSE, row.names=FALSE)

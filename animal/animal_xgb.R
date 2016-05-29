@@ -1,18 +1,6 @@
 library(caret)
 library(xgboost)
 library(rpart)
-library(ipred)
-
-LogLoss <- function (data, lev = NULL, model = NULL) 
-{
-  probs <- pmax(pmin(as.numeric(data$T), 1 - 1e-15), 1e-15)
-  logPreds <- log(probs)        
-  log1Preds <- log(1 - probs)
-  real <- (as.numeric(data$obs) - 1)
-  out <- c(mean(real * logPreds + (1 - real) * log1Preds)) * -1
-  names(out) <- c("LogLoss")
-  out
-}
 
 # Inicializamos semilla fija para que no aparezca un resulta nuevo cada vez
 set.seed(343)
@@ -109,11 +97,6 @@ inTrain <- createDataPartition(y=train$OutcomeType, p=.6, list=FALSE)
 training <- train[inTrain,]
 testing <- train[-inTrain,]
 
-y_training <- as.numeric(as.factor(training$OutcomeType)) - 1
-labels_train <- data.frame(training$OutcomeType, y_training)
-y_testing <- as.numeric(as.factor(testing$OutcomeType)) - 1
-labels_testing <- data.frame(testing$OutcomeType, y_testing)
-
 clases <- OutcomeType ~ AnimalType + Edad + SexuponOutcome + newFactorBreed + Color
 
 #controlRF <- trainControl(
@@ -124,14 +107,14 @@ clases <- OutcomeType ~ AnimalType + Edad + SexuponOutcome + newFactorBreed + Co
 control <- trainControl(
   method="cv",
   number=5,
-  summaryFunction=LogLoss,
+  summaryFunction=mnLogLoss,
   verboseIter = TRUE,
   returnResamp = "all", 
   classProbs = TRUE
 )
 
 tuning <- expand.grid(
-  nrounds = 1000,
+  nrounds = 45,
   eta = c(0.01, 0.001, 0.0001),
   max_depth = c(2, 4, 6, 8, 10),
   gamma = 1,
@@ -139,28 +122,14 @@ tuning <- expand.grid(
   min_child_weight = 1
 )
 
-#modelo <- train(clases, data=training, method="xgbTree", trControl=control, tuneGrid=tuning)
+modelo <- train(clases, data=training, method="xgbTree", metric="logLoss", trControl=control, tuneGrid=tuning, do.trace = TRUE)
+print(modelo)
 
-xgb_training <- xgb.DMatrix(model.matrix(~AnimalType+Edad+SexuponOutcome+newFactorBreed+Color,
-                                         data=training),
-                         label=y_training, missing=NA)
-
-xgb_testing <- xgb.DMatrix(model.matrix(~AnimalType+Edad+SexuponOutcome+newFactorBreed+Color,
-                                         data=testing),
-                            label=y_testing, missing=NA)
-
-xgb_test <- xgb.DMatrix(model.matrix(~~AnimalType+Edad+SexuponOutcome+newFactorBreed+Color, 
-                                     data=test), missing=NA)
-
-xgb_model <- xgboost(xgb_training, y_training, nrounds=45, objective='multi:softprob',
-                     num_class=5, eval_metric='mlogloss',
-                     early.stop.round=TRUE)
-
-predictions <- predict(xgb_model, xgb_test)
-predictions
-
-validacion <- predict(xgb_model, xgb_testing)
+validacion <- predict(modelo, testing)
 confusionMatrix(testing$OutcomeType, validacion)
+
+prediccion <- predict(modelo, test)
+prediccion
 
 #modelo.rf <- train(clases, data=training, method="rf", trControl= controlRF, metric="LogLoss", 
 #                   maximize = FALSE, do.trace = TRUE)
