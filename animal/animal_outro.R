@@ -105,6 +105,8 @@ age_fit <- rpart(AgeinDays ~ AnimalType + Sex + Intact + SimpleBreed + HasName,
 # Impute predicted age values where missing using "predict"
 full$AgeinDays[is.na(full$AgeinDays)] <- predict(age_fit, full[is.na(full$AgeinDays), ])
 
+summary(full$AgeinDays)
+
 # All gone? Yes.
 sum(is.na(full$AgeinDays))
 
