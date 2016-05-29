@@ -26,7 +26,7 @@ todo$SexuponOutcome[todo$SexuponOutcome == ''] <- "Unknown"
 todo$Sexo <- ifelse(grepl('Male', todo$SexuponOutcome), 'Macho',
                    ifelse(grepl('Unknown', todo$SexuponOutcome), 'Desconocido', 'Hembra'))
 # Añadimos si el animal está castrado, esterilizado o intacto
-#todo$Estado <- sapply(todo$SexuponOutcome, function(x) strsplit(x, split = ' ')[[1]][1])
+todo$Estado <- sapply(todo$SexuponOutcome, function(x) strsplit(x, split = ' ')[[1]][1])
 
 # Simplificamos las razas y diferenciamos si es mestizo
 todo$Raza <- sapply(todo$Breed, function(x) gsub(' Mix', '', strsplit(x, split = '/')[[1]][1]))
@@ -49,7 +49,7 @@ calculo <- ifelse(todo$UnidadTiempo == 'day', 1,
 todo$Edad <- todo$ValorTiempo * calculo
 
 # Predecimos edades que faltantes
-modeloEdad <- rpart(Edad ~ Name + AnimalType + Sexo + Edad + Raza + Mestizo + Color, 
+modeloEdad <- rpart(Edad ~ Name + AnimalType + Sexo + Estado + Edad + Raza + Mestizo + Color, 
                  data = todo[!is.na(todo$Edad), ], 
                  method = 'anova')
 
@@ -60,6 +60,7 @@ todo$OutcomeType <- as.numeric(factor(todo$OutcomeType)) - 1
 todo$Name <- as.numeric(factor(todo$Name)) - 1
 todo$AnimalType <- as.numeric(factor(todo$AnimalType)) - 1
 todo$Sexo <- as.numeric(factor(todo$Sexo)) - 1
+todo$Estado <- as.numeric(factor(todo$Estado)) - 1
 summary(todo$Edad)
 todo$Raza <- as.numeric(factor(todo$Raza)) - 1
 todo$Mestizo <- as.numeric(factor(todo$Mestizo)) - 1
@@ -68,7 +69,7 @@ todo$Color <- as.numeric(factor(todo$Color)) - 1
 # clustering
 
 # Volvemos a separar los datos en sus respectivos conjuntos de entrenamiento y validación
-train <- todo[1:nrow(train), c(4, 2, 6, 11, 16, 12, 13, 10)]
+train <- todo[1:nrow(train), c(4, 2, 6, 11, 12, 17, 13, 14, 10)]
 
 # Crear particiones para entrenamiento y validacion
 in.train <- createDataPartition(y=train$OutcomeType, p=0.80, list=FALSE)
@@ -112,7 +113,7 @@ xgb.fit <- xgboost(param = xg.param, data = train.x[-in.train, ],
 xgb.fit <- xgboost(param = xg.param, data = train.x, label = train.y, nrounds = cv.rounds)
 
 # Prediccion
-test <- todo[(nrow(train)+1):nrow(todo), c(2, 6, 11, 16, 12, 13, 10)]
+test <- todo[(nrow(train)+1):nrow(todo), c(2, 6, 11, 12, 17, 13, 14, 10)]
 test <- as.matrix(test)
 test <- matrix(data = as.numeric(test), nrow = nrow(test), ncol = ncol(test))
 
