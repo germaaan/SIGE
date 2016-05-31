@@ -3,6 +3,7 @@ library(rpart)
 library(caret)
 library(xgboost)
 library(lubridate)
+library(Ckmeans.1d.dp)
 
 
 # Inicializamos semilla fija para que no aparezca un resulta nuevo cada vez
@@ -125,11 +126,16 @@ ajuste.cv <- xgb.cv(param = xg.param, data = train.x, label = train.y, nfold = 5
 num_rondas <- round(mean(which(ajuste.cv$test.mlogloss.mean == min(ajuste.cv$test.mlogloss.mean))))  
 
 # Ajustar modelo en el conjunto de validacion
-validacion <- xgboost(param = xg.param, data = train.x[-in.train, ], 
-                   label = train.y[-in.train], nrounds = num_rondas)
+validacion <- xgboost(param = xg.param, data = train.x[-in.train, ], label = train.y[-in.train], 
+                      nrounds = num_rondas)
 
 # Ajustar modelo en el conjunto de entrenamiento completo
 ajuste <- xgboost(param = xg.param, data = train.x, label = train.y, nrounds = num_rondas)
+
+names <- dimnames(train.x)[[2]]
+importance_matrix <- xgb.importance(names, model = ajuste)
+xgb.plot.importance(importance_matrix[1:11,])
+
 
 # Prediccion
 test <- todo[(nrow(train)+1):nrow(todo), c(2, 12, 14, 16, 6, 17, 18, 23, 19, 20, 10)]
