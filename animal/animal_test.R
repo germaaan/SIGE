@@ -114,7 +114,7 @@ best_param = list()
 best_logloss = Inf
 best_logloss_index = 0
 
-for (iter in 1:5) {
+for (iter in 1:10) {
   parametros <- list("objective"="multi:softprob",
                    "eval_metric"="mlogloss",
                    "num_class"=5,
@@ -128,7 +128,7 @@ for (iter in 1:5) {
                    "nthread"=6)
   
   # Cross-Validation
-  ajuste.cv <- xgb.cv(param=parametros, data=train.x, label=train.y, nfold=5, nrounds=1000,
+  ajuste.cv <- xgb.cv(param=parametros, data=train.x, label=train.y, nfold=5, nrounds=2000,
                       maximize=FALSE)
   
   min_logloss = min(ajuste.cv[, test.mlogloss.mean])
