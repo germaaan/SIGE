@@ -273,20 +273,26 @@
                     </ul>
                 </section>
                 <section>
-                  <h3><strong>Alcance del conjunto de reglas</strong></h3>
-                  <ul>
-                    <li>El marco de tiempo para el funcionamiento del clasificador es de un nivel. Esto se hace teniendo en cuenta que el diseño de los niveles es el mismo cambiando solo algunas aspectos como la velocidad de los eventos.</li>
-                    <div style="font-size:0; height:10px;"></div>
-                    <li>El alcance es una función que representa el número de niveles a partir de los que se genera el conjunto de reglas: el último nivel, el promedio de los tres últimos niveles o el promedio de todos los niveles.</li>
-                  </ul>
+                    <h3><strong>Alcance del conjunto de reglas</strong></h3>
+                    <ul>
+                        <li>El marco de tiempo para el funcionamiento del clasificador es de un nivel. Esto se hace teniendo en cuenta que el diseño de los niveles es el mismo cambiando solo algunas aspectos como la velocidad de los eventos.</li>
+                        <div style="font-size:0; height:10px;"></div>
+                        <li>El alcance es una función que representa el número de niveles a partir de los que se genera el conjunto de reglas: el último nivel, el promedio de los tres últimos niveles o el promedio de todos los niveles.</li>
+                    </ul>
                 </section>
                 <section>
-                  <h3><strong>Resolución de conflicto en el conjunto de reglas</strong></h3>
-                  <ul>
-                    <li>Cada regla es ponderada por el valor de su importancia en el ranking (en un rango 0.1-0.45).</li>
-                    <div style="font-size:0; height:10px;"></div>
-                    <li>En caso de conflicto se observa cual de las reglas en conflicto ha sido activada más veces, en función de ese valor y su valor ponderado se seleccionará una de reglas para ser activada.</li>
-                  </ul>
+                    <h3><strong>Resolución de conflicto en el conjunto de reglas</strong></h3>
+                    <ul>
+                        <li>Cada regla es ponderada por el valor de su importancia en el ranking (en un rango 0.1-0.45).</li>
+                        <div style="font-size:0; height:10px;"></div>
+                        <li>En caso de conflicto se observa cual de las reglas en conflicto se puede usar distintos métodos de resolución:</li>
+                        <ul style="font-size: 25px;">
+                            <li><strong>Equal-voting</strong>: se toma como válida la regla que ha sido activada más veces.</li>
+                            <li><strong>Weighted-voting</strong>: en función del número de veces que ha sido activada y su valor ponderado se seleccionará una de reglas para ser activada.</li>
+                            <li><strong>First-rule-to-fire</strong>: prevalece la regla más arriba en el ranking.</li>
+                            <li><strong>Inverse-first-rule</strong>: prevalece la regla más abajo en el ranking.</li>
+                        </ul>
+                    </ul>
                 </section>
                 <section>
                     <h3><strong>Experimento</strong></h3>
@@ -294,12 +300,32 @@
                     <div style="font-size:0; height:10px;"></div>
                     <li>La distribución resultante fue de 19 Conquistadores, 17 No Conquistadores y 1 Conquistador/Manager.</li>
                 </section>
+                <section>
+                    <h3><strong>Experimento</strong></h3>
+                    <li style="font-size: 25px;">Se midio la "conquistabilidad" de un jugador tomando la diferencia entre la puntuación más alta en Conquistados y en otro tipo de puntuación. </li>
+                    <li style="font-size: 25px;">También se calculó la entropía de las puntuaciones de DGD.</li>
+                    <img alt="image" src="images/entropia.png" height="600" />
+                </section>
+            </section>
+
+            <section>
+                <h3><strong>Resultados</strong></h3>
+                <li style="font-size: 30px;">12 valores resultantes de 12 clasificadores, reportando una vez por nivel y luego promediado sobre todos los niveles y todos los juegos para producir una clasificación final.</li>
+                <div style="font-size:0; height:10px;"></div>
+                <img alt="image" src="images/resultados.png" height="600" />
+            </section>
+
+            <section>
+                <h3><strong>Conclusiones</strong></h3>
+                <li>Desarrollar un clasificador en tiempo real para jugadores en un juego tipo arcade requiere tener en cuenta muchos aspectos: generar un conjunto de reglas optimo en base al conocimiento obtenido de los los árboles de decisión, aplicarlas
+                    con alcance determinado y gestionando también la resolución de conflictos.</li>
+                <li>Aún así, la precisión obtenido ha sido de entorno al 70%, lo que se puede considerar un valor aceptable para tener en cuenta en lo que se refiere a los objetivos a planteados.</li>
             </section>
 
             <section>
                 <h3>Referencias</h3>
                 <ul>
-                    <li></li>
+                    <li><strong>"Real-time rule-based classification of player types in computer games"</strong> Ben Cowley, Darryl Charles, Michaela Black, Ray Hicke. 22 de agosto de 2012. <a href="http://link.springer.com/article/10.1007/s11257-012-9126-z">http://link.springer.com/article/10.1007/s11257-012-9126-z</a></li>
                 </ul>
             </section>
 
