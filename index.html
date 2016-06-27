@@ -190,7 +190,7 @@
                     </ol>
                 </section>
                 <section>
-                    <h3>Aprendiendo de los jugadores</h3>
+                    <h3><strong>Aprendiendo de los jugadores</strong></h3>
                     <ul>
                         <li>Para obtener los clasificadores se recogerán datos de 100 jugadores, registrando sus partidas y grabando sus preferencias de juego.</li>
                         <div style="font-size:0; height:10px;"></div>
@@ -205,7 +205,7 @@
                     </ul>
                 </section>
                 <section>
-                    <h3>Aprendiendo de las características de los gameplays</h3>
+                    <h3><strong>Aprendiendo de las características de los gameplays</strong></h3>
                     <ul>
                         <li>Para el data mining se usa SPSS Modeller con los algoritmos CART, C5.0, RBFN and K-Means.</li>
                         <div style="font-size:0; height:10px;"></div>
@@ -217,7 +217,7 @@
                     </ul>
                 </section>
                 <section>
-                    <h3>Aprendiendo de las características de los gameplays</h3>
+                    <h3><strong>Aprendiendo de las características de los gameplays</strong></h3>
                     <ul>
                         <li>Cada algoritmo fue ejecutado con una batería de parámetros para explorar el espacio de soluciones en busca de la mayor precisión.</li>
                         <ul style="font-size: 25px;">
@@ -237,7 +237,7 @@
                     </ul>
                 </section>
                 <section>
-                    <h3>Conjunto de reglas "altamente clasificadas"</h3>
+                    <h3><strong>Conjunto de reglas "altamente clasificadas"</strong></h3>
                     <ul>
                         <li>Hay que seleccionar las mejores reglas por dos motivos:</li>
                         <div style="font-size:0; height:10px;"></div>
@@ -251,7 +251,7 @@
                     </ul>
                 </section>
                 <section>
-                    <h3>Clasificación</h3>
+                    <h3><strong>Clasificación</strong></h3>
                     <ul>
                         <li>Mejores árboles: </li>
                         <p style="font-size: 25px;">
@@ -261,15 +261,38 @@
                         <p style="font-size: 25px;">
                             \[ RuleRank=\frac{Support}{TestSetSize*Confidence} \]
                         </p>
-                        <li style="font-size: 25px;"><strong>Ejemplo:</strong> una regla de un árbol usando 75/25 para entrenamiento/prueba, que clasifica 45 registros, debería tener a soporte relativo de 45/75=0.6 (que es relativamente alto), lo que significa que su confianza era 34/45=0.756. Esto le daría un rango de 0.6*0.756 = 0.4536.</li>
+                        <li style="font-size: 25px;"><strong>Ejemplo:</strong> una regla de un árbol usando 75/25 para entrenamiento/prueba, que clasifica 45 registros, debería tener a soporte relativo de 45/75=0.6 (que es relativamente alto), lo que significa que su confianza era
+                            34/45=0.756. Esto le daría un rango de 0.6*0.756 = 0.4536.</li>
                     </ul>
                 </section>
                 <section>
-                    <h3>Clasificación</h3>
+                    <h3><strong>Clasificación</strong></h3>
                     <ul>
                         <li>Esto permite clasificar todas las reglas y quedarse con las mejores: </li>
                         <img alt="image" src="images/tabla_1.png" height="600" />
                     </ul>
+                </section>
+                <section>
+                  <h3><strong>Alcance del conjunto de reglas</strong></h3>
+                  <ul>
+                    <li>El marco de tiempo para el funcionamiento del clasificador es de un nivel. Esto se hace teniendo en cuenta que el diseño de los niveles es el mismo cambiando solo algunas aspectos como la velocidad de los eventos.</li>
+                    <div style="font-size:0; height:10px;"></div>
+                    <li>El alcance es una función que representa el número de niveles a partir de los que se genera el conjunto de reglas: el último nivel, el promedio de los tres últimos niveles o el promedio de todos los niveles.</li>
+                  </ul>
+                </section>
+                <section>
+                  <h3><strong>Resolución de conflicto en el conjunto de reglas</strong></h3>
+                  <ul>
+                    <li>Cada regla es ponderada por el valor de su importancia en el ranking (en un rango 0.1-0.45).</li>
+                    <div style="font-size:0; height:10px;"></div>
+                    <li>En caso de conflicto se observa cual de las reglas en conflicto ha sido activada más veces, en función de ese valor y su valor ponderado se seleccionará una de reglas para ser activada.</li>
+                  </ul>
+                </section>
+                <section>
+                    <h3><strong>Experimento</strong></h3>
+                    <li>Para poder a prueba el clasificador se reclutaron 37 sujetos que no hubieran tomado parte en la primera parte y se adquieren los datos de forma igual.</li>
+                    <div style="font-size:0; height:10px;"></div>
+                    <li>La distribución resultante fue de 19 Conquistadores, 17 No Conquistadores y 1 Conquistador/Manager.</li>
                 </section>
             </section>
 
