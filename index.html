@@ -66,11 +66,11 @@
                     <h2><strong>Objetivo</strong></h2>
                     <ul>
                         <li>Aprovechar tanto como sea posible la comprensión de la cognición y la emoción humana.</li>
-                        <br>
+                        <div style="font-size:0; height:10px;"></div>
                         <li>Una mejor comprensión de los diferentes tipos de jugadores puede ayudar en el diseño de juegos.</li>
-                        <br>
+                        <div style="font-size:0; height:10px;"></div>
                         <li>Un modelado preciso de los jugadores puede ser usado para crear mecánicas de juego adaptables en tiempo real.</li>
-                        <br>
+                        <div style="font-size:0; height:10px;"></div>
                         <li><strong>Idea base</strong>: <u>un modelo de jugador será tan bueno como el modelo teórico que lo soporta y el modelo de aprendizaje que lo procesa</u>.</li>
                     </ul>
                 </section>
@@ -78,7 +78,7 @@
                     <h2><strong>Problema</strong></h2>
                     <ul>
                         <li>El comportamiento de los jugadores puede ser complejo, variable y dificil de interpretar.</li>
-                        <br>
+                        <div style="font-size:0; height:10px;"></div>
                         <li>Varios modelos de psicología de jugadores se han propuesto para facilitar la clasificación con distinto grado de éxito.</li>
                     </ul>
                 </section>
@@ -86,7 +86,7 @@
                     <h2><strong>Solución</strong></h2>
                     <ul>
                         <li>Un enfoque de aprendizaje automático mediante modelos no teóricos del comportamiento de los jugadores permite obtener resultados razonables.</li>
-                        <br>
+                        <div style="font-size:0; height:10px;"></div>
                         <li>Usar enfoques teóricos derivados de la psicología de los tipos de jugador en conjunto de con algoritmos de aprendizaje automático para construir un clasificador en tiempo real con resultados precisos.</li>
                     </ul>
                 </section>
@@ -107,6 +107,168 @@
                         <li>Espacio de juego completamente representado.</li>
                         <li>Elementos simples que no restan complejidad al juego: diferentes tipos de jugador.</li>
                         <li>Movimientos en tiempo real, pero con lógica basada en turnos: árboles de decisión.</li>
+                    </ul>
+                </section>
+            </section>
+
+            <section>
+                <section>
+                    <h3><strong>Trasfondo</strong></h3>
+                    <ul>
+                        <li>Se asume que cada jugador va a tener un tipo de personalidad como jugador: el que busca divertirse, el precavido, el que sigue una estrategia... </li>
+                        <div style="font-size:0; height:10px;"></div>
+                        <li>Esto permitirá agrupar sus modelos cognitivos ante distintas situaciones y tener la posibilidad de diferenciarlas.</li>
+                        <div style="font-size:0; height:10px;"></div>
+                        <li>La obtención de los indicadores observables en la construcción de los bloques de la personalidad del jugador es el principal reto del modelado de jugadores.</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3><strong>Clasificación</strong></h3>
+                    <ul>
+                        <li>Reconocimiento de patrones a partir de datos de entrenamiento etiquetados o sin etiquetar.</li>
+                        <div style="font-size:0; height:10px;"></div>
+                        <li>Determinar tipología del jugador:</li>
+                        <ul style="font-size: 30px;">
+                            <li>Data mining para intentar modelar el comportamiento de jugadores expertos o buscar características distintivas.</li>
+                            <li>Arboles de decisión, redes neuronales artificiales y clasificadores Naïve Bayes para modelar las características de una hora de juego por un solo experto.</li>
+                            <li>Data mining para descubrir las preferencias de comportamiento del jugador, analizando lo que hacen e intentan inferir lo que prefieren hacer.</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section>
+                    <h3><strong>Tipología del jugador</strong></h3>
+                    <ul>
+                        <li>El objetivo es clasificar la variación en las capacidades y el temperamento que tienen impacto en las experiencia de juego.</li>
+                        <div style="font-size:0; height:10px;"></div>
+                        <li>La personalidad del jugador puede estar relacionada a los contenidos del juego en concreto o a otros factores como la presencia de otros jugadores.</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3><strong>Tipología del jugador</strong></h3>
+                    <ul>
+                        <li>Según la tipología DGD (Demographic Game Design) podemos diferenciar cuatro tipos de jugadores: </li>
+                        <ul style="font-size: 30px;">
+                            <li><strong>Conquistador</strong>: ganar a toda costa, orientado a objetivos y que disfrutan sintiendose dominantes.</li>
+                            <li><strong>Manager</strong>: buscar completarlo todo de la mejor forma posible, repitiendo el juego si es necesario.</li>
+                            <li><strong>Viajero</strong>: quieren encontrar nuevas experiencias, pero sin marcarse un objetivo concreto.</li>
+                            <li><strong>Partícipe</strong>: disfruta jugar socialmente o participando en un mundo alternativo.</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section>
+                    <h3><strong>Tipología del jugador</strong></h3>
+                    <img alt="image" src="images/encuesta.png" height="600" />
+                </section>
+            </section>
+
+            <section>
+                <section>
+                    <h3><strong>Métodos</strong></h3>
+                    <ul>
+                        <li>Buscar coincidencias en registos de gameplays que coincidan con las etiquetas de tipo de jugadores usando algoritmos de aprendizaje automático.</li>
+                        <div style="font-size:0; height:10px;"></div>
+                        <li>En el caso particular del Pac-Man se busca evaluar de forma binaria si un jugador es Conquistador / No Conquistador.</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3><strong>Hipótesis de comportamiendo de un Conquistador</strong></h3>
+                    <ol>
+                        <li>Tratará de cazar tantos fantasmas como sea posible.</li>
+                        <li>Tiene como objetivo completar más niveles lo más rápido posible.</li>
+                        <li>Más propenso a tomar riesgos.</li>
+                        <li>Intentará coger las frutas siempre que aparezcan.</li>
+                    </ol>
+                </section>
+                <section>
+                    <h3><strong>Hipótesis de comportamiendo de un No Conquistador</strong></h3>
+                    <ol>
+                        <li>Tarda más en completar los niveles.</li>
+                        <li>No suele retroceder.</li>
+                        <li>Espera más, sobretodo para poder coger la capsula.</li>
+                        <li>No se arriesga en coger la fruta.</li>
+                        <li>No persigue demasiado a los fantasmas en el modo caza.</li>
+                    </ol>
+                </section>
+                <section>
+                    <h3>Aprendiendo de los jugadores</h3>
+                    <ul>
+                        <li>Para obtener los clasificadores se recogerán datos de 100 jugadores, registrando sus partidas y grabando sus preferencias de juego.</li>
+                        <div style="font-size:0; height:10px;"></div>
+                        <li>El protocolo a seguir:</li>
+                        <ol style="font-size: 30px;">
+                            <li>Los jugadores son llevados al laboratorio e informados sobre los requisitos y el procedimiento.</li>
+                            <li>Los jugadores contestan a un cuestionario para conocer sus preferencias de juego y su información (edad, sexo, habilidad en Pac-Man, casual/hardcore/no idea).</li>
+                            <li>Los jugadores juegan tres partidas: dos de práctica y una para la prueba. Los datos de esta última serán los usados para el modelado.</li>
+                        </ol>
+                        <div style="font-size:0; height:10px;"></div>
+                        <li>Para describir el comportamiento de los jugadores se construye un conjunto de métricas de juego: agresión, velocidad, precaución, minucioisidad, habilida de control.</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>Aprendiendo de las características de los gameplays</h3>
+                    <ul>
+                        <li>Para el data mining se usa SPSS Modeller con los algoritmos CART, C5.0, RBFN and K-Means.</li>
+                        <div style="font-size:0; height:10px;"></div>
+                        <li>CART y C5.0 para el manejo de funciones categóricas y continuas.</li>
+                        <div style="font-size:0; height:10px;"></div>
+                        <li>RBFN y K-Means se usaron como alternativa a la aproximación de aprendizaje automático para probar si el enfoque con árboles de decisión tenía una precisión muy deficiente.</li>
+                        <div style="font-size:0; height:10px;"></div>
+                        <li>Los vectores de características del comportamiento de los usuarios se procesó con cada uno de los algoritmos.</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>Aprendiendo de las características de los gameplays</h3>
+                    <ul>
+                        <li>Cada algoritmo fue ejecutado con una batería de parámetros para explorar el espacio de soluciones en busca de la mayor precisión.</li>
+                        <ul style="font-size: 25px;">
+                            <li>CART: característica de importancia y profundidad del árbol.</li>
+                            <li>C5.0: boosting, cross-validation, poda, winnowing.</li>
+                        </ul>
+                        <div style="font-size:0; height:10px;"></div>
+                        <li>Los conjuntos de entrenamiento y prueba fueron extraidos de forma automática de 100 vectores con un ratio 2:1 con siete replicas de cada ajuste de parametros.</li>
+                        <div style="font-size:0; height:10px;"></div>
+                        <li>Los mejores resultados en precisión fueron:</li>
+                        <ul style="font-size: 25px;">
+                            <li>CART: 59%</li>
+                            <li>C5.0: 61%</li>
+                            <li>RBFN: 54%</li>
+                            <li>K-Means: 43 %</li>
+                        </ul>
+                    </ul>
+                </section>
+                <section>
+                    <h3>Conjunto de reglas "altamente clasificadas"</h3>
+                    <ul>
+                        <li>Hay que seleccionar las mejores reglas por dos motivos:</li>
+                        <div style="font-size:0; height:10px;"></div>
+                        <ol style="font-size: 25px;">
+                            <li>El clasificador tiene que utilizar la menor cantidad de recursos posibles que pueden ser necesarios para otros fines. En juegos comerciales esto es esencial porque la mayor parte del procesamiento es requerido por el apartado
+                                gráfico.
+                            </li>
+                            <div style="font-size:0; height:5px;"></div>
+                            <li>Eliminar las reglas que se producen en casos casi individuales permite evitar el sobreajuste.</li>
+                        </ol>
+                    </ul>
+                </section>
+                <section>
+                    <h3>Clasificación</h3>
+                    <ul>
+                        <li>Mejores árboles: </li>
+                        <p style="font-size: 25px;">
+                            \[ TreeRank=\frac{(TreeAccuracy-\overline{TreeAccuracy})^{2}}{(OverallDefault-ReplicationDefault)^{2}} \]
+                        </p>
+                        <li>Mejores reglas: </li>
+                        <p style="font-size: 25px;">
+                            \[ RuleRank=\frac{Support}{TestSetSize*Confidence} \]
+                        </p>
+                        <li style="font-size: 25px;"><strong>Ejemplo:</strong> una regla de un árbol usando 75/25 para entrenamiento/prueba, que clasifica 45 registros, debería tener a soporte relativo de 45/75=0.6 (que es relativamente alto), lo que significa que su confianza era 34/45=0.756. Esto le daría un rango de 0.6*0.756 = 0.4536.</li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>Clasificación</h3>
+                    <ul>
+                        <li>Esto permite clasificar todas las reglas y quedarse con las mejores: </li>
+                        <img alt="image" src="images/tabla_1.png" height="600" />
                     </ul>
                 </section>
             </section>
@@ -135,8 +297,16 @@
 
             transition: 'slide', // none/fade/slide/convex/concave/zoom
 
+            math: {
+                mathjax: 'https://cdn.mathjax.org/mathjax/latest/MathJax.js',
+                config: 'TeX-AMS_HTML-full' // See http://docs.mathjax.org/en/latest/config-files.html
+            },
+
             // Optional reveal.js plugins
             dependencies: [{
+                src: 'plugin/math/math.js',
+                async: true
+            }, {
                 src: 'lib/js/classList.js',
                 condition: function() {
                     return !document.body.classList;
